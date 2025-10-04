@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Molecular Property Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Molecular Property Predictor</h1>
+        <p class="subtitle">Enter a SMILES string to predict molecular properties</p>
+        
+        <div class="input-group">
+            <label for="smiles">SMILES String:</label>
+            <input type="text" id="smiles" placeholder="e.g., CCO (ethanol)">
+            <div class="example">Example: CCO (ethanol), c1ccccc1 (benzene), CC(=O)O (acetic acid)</div>
+        </div>
+        
+        <button onclick="predict()">Predict Properties</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
