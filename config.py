@@ -1,4 +1,3 @@
-# ============= config.py =============
 """
 Configuration settings for the Flask application
 """

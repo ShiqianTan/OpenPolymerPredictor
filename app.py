@@ -1,11 +1,13 @@
-# ============= app.py =============
 """
 Main Flask application entry point
 """
 from flask import Flask, request, jsonify, render_template
 from models.predictor import MolecularPropertyPredictor
-from rdkit import Chem
+from utils.validators import validate_smiles, generate_molecule_image
 import config
+import base64
+from rdkit import Chem
+from rdkit.Chem import Draw
 
 app = Flask(__name__)
 app.config.from_object(config)
@@ -26,10 +28,17 @@ def predict():
         if not smiles:
             return jsonify({'error': 'No SMILES string provided'}), 400
         
-        # Validate SMILES
-        mol = Chem.MolFromSmiles(smiles)
-        if mol is None:
-            return jsonify({'error': 'Invalid SMILES string'}), 400
+        # Validate SMILES with detailed error reporting
+        is_valid, mol, error_msg = validate_smiles(smiles)
+        
+        if not is_valid:
+            return jsonify({'error': error_msg}), 400
+        
+        # Generate molecular structure image (heavy atoms only)
+        img_base64 = generate_molecule_image(mol, remove_hydrogens=True)
+        
+        if img_base64 is None:
+            return jsonify({'error': 'Could not generate molecular structure'}), 500
         
         # Predict properties
         predictions = predictor.predict(smiles)
@@ -39,11 +48,13 @@ def predict():
         
         return jsonify({
             'smiles': smiles,
-            'predicted_properties': predictions
+            'canonical_smiles': Chem.MolToSmiles(mol),
+            'predicted_properties': predictions,
+            'molecule_image': img_base64
         })
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
 
 @app.route('/health', methods=['GET'])
 def health_check():

@@ -1,4 +1,3 @@
-# ============= models/predictor.py =============
 """
 Molecular property prediction model
 """

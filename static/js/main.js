@@ -1,16 +1,18 @@
 async function predict() {
     const smiles = document.getElementById('smiles').value;
     const resultDiv = document.getElementById('result');
+    const moleculeDiv = document.getElementById('molecule-structure');
     const button = document.querySelector('button');
     
     if (!smiles) {
         showError('Please enter a SMILES string');
+        moleculeDiv.style.display = 'none';
         return;
     }
     
     // Show loading state
     button.disabled = true;
-    button.innerHTML = '<span class="loading"></span> Predicting...';
+    button.innerHTML = '<span class="loading"></span> Validating & Predicting...';
     
     try {
         const response = await fetch('/predict', {
@@ -25,11 +27,14 @@ async function predict() {
         
         if (data.error) {
             showError(data.error);
+            moleculeDiv.style.display = 'none';
         } else {
             showResults(data);
+            showMoleculeStructure(data);
         }
     } catch (error) {
         showError('Network error: ' + error.message);
+        moleculeDiv.style.display = 'none';
     } finally {
         button.disabled = false;
         button.innerHTML = 'Predict Properties';
@@ -45,9 +50,25 @@ function showResults(data) {
         <p><strong>LogP:</strong> ${data.predicted_properties.logP.toFixed(2)}</p>
         <p><strong>TPSA:</strong> ${data.predicted_properties.tpsa.toFixed(2)} Ų</p>
         <hr>
-        <p style="font-size: 12px; color: #666;">SMILES: ${data.smiles}</p>
+        <p style="font-size: 12px; color: #666;"><strong>Input SMILES:</strong> ${data.smiles}</p>
+        <p style="font-size: 12px; color: #666;"><strong>Canonical SMILES:</strong> ${data.canonical_smiles}</p>
     `;
     resultDiv.style.display = 'block';
+}
+
+function showMoleculeStructure(data) {
+    const moleculeDiv = document.getElementById('molecule-structure');
+    
+    if (data.molecule_image) {
+        moleculeDiv.innerHTML = `
+            <h3>Molecular Structure (Heavy Atoms Only)</h3>
+            <img src="data:image/png;base64,${data.molecule_image}" alt="Molecular Structure">
+            <div class="molecule-info">2D structure generated with RDKit (hydrogens removed)</div>
+        `;
+        moleculeDiv.style.display = 'block';
+    } else {
+        moleculeDiv.style.display = 'none';
+    }
 }
 
 function showError(message) {
